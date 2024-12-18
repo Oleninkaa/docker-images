@@ -112,35 +112,35 @@ def addTicket(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Створити нове замовлення (PostgreSQL)
-@api_view(['POST'])
-def addOrder(request):
-    """
-    Створити нове замовлення.
-    Очікує структуру даних:
-    {
-        "customer": <ID клієнта>,
-        "ticket": <ID квитка>,
-        "seller": <ID продавця>
-    }
-    """
-    serializer = OrderSerializer(data=request.data)
-
-    # Перевірка валідності даних
-    if serializer.is_valid():
-        # Перевірка унікальності квитка
-        ticket_id = serializer.validated_data['ticket'].id
-        if Order.objects.filter(ticket_id=ticket_id).exists():
-            return Response(
-                {"error": "Цей квиток вже прив'язаний до існуючого замовлення."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Збереження замовлення
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# # Створити нове замовлення (PostgreSQL)
+# @api_view(['POST'])
+# def addOrder(request):
+#     """
+#     Створити нове замовлення.
+#     Очікує структуру даних:
+#     {
+#         "customer": <ID клієнта>,
+#         "ticket": <ID квитка>,
+#         "seller": <ID продавця>
+#     }
+#     """
+#     serializer = OrderSerializer(data=request.data)
+#
+#     # Перевірка валідності даних
+#     if serializer.is_valid():
+#         # Перевірка унікальності квитка
+#         ticket_id = serializer.validated_data['ticket'].id
+#         if Order.objects.filter(ticket_id=ticket_id).exists():
+#             return Response(
+#                 {"error": "Цей квиток вже прив'язаний до існуючого замовлення."},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#
+#         # Збереження замовлення
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+#
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #===== UPDATING
 @api_view(['PUT'])
@@ -641,3 +641,33 @@ def deleteCustomerPhoto(request, pk):
 
 
 ###########################################
+from .tasks import send_message_to_queue
+
+
+@api_view(['POST'])
+def addOrder(request):
+    """
+    Створити нове замовлення з відправкою повідомлення в RabbitMQ.
+    """
+    serializer = OrderSerializer(data=request.data)
+
+    # Перевірка валідності даних
+    if serializer.is_valid():
+        # Перевірка унікальності квитка
+        ticket_id = serializer.validated_data['ticket'].id
+        if Order.objects.filter(ticket_id=ticket_id).exists():
+            return Response(
+                {"error": "Цей квиток вже прив'язаний до існуючого замовлення."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Збереження замовлення
+        serializer.save()
+
+        # Відправка повідомлення в RabbitMQ
+        send_message_to_queue.delay(f"New order created with ID: {serializer.data['id']}")
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

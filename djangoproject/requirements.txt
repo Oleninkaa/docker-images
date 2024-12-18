@@ -6,3 +6,4 @@ Pillow==9.0.0
 celery==5.2.4
 kombu==5.2.3
 pika
+redis

@@ -17,13 +17,11 @@ services:
       - MONGO_DB_PORT=27017
       - MONGO_DB_USERNAME=admin
       - MONGO_DB_PASSWORD=admin
-    volumes:
-      - ./media:/app/media  # Том для медіафайлів
+      - RABBITMQ_HOST=rabbitmq  # Додаємо змінну для підключення до RabbitMQ
     depends_on:
       - db
       - mongo
-
-
+      - rabbitmq  # Додаємо залежність від RabbitMQ
 
   db:
     container_name: db
@@ -52,7 +50,22 @@ services:
     ports:
       - 27017:27017
 
-
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"  # порт для доступу до веб-інтерфейсу RabbitMQ
+      - "5672:5672"    # стандартний порт для підключення до RabbitMQ
+#  consumer:
+#    build:
+#      context: .
+#      dockerfile: services/Dockerfile
+#    container_name: consumer
+#    depends_on:
+#      - rabbitmq
+#    environment:
+#      - RABBITMQ_HOST=rabbitmq
+#      - QUEUE_NAME=order_queue
 
 volumes:
   pgdata: {}
