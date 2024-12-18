@@ -23,6 +23,8 @@ services:
       - db
       - mongo
 
+
+
   db:
     container_name: db
     image: postgres:12
@@ -49,6 +51,8 @@ services:
       - ./initial_data.json:/docker-entrypoint-initdb.d/initial_data.json
     ports:
       - 27017:27017
+
+
 
 volumes:
   pgdata: {}

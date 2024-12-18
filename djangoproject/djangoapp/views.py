@@ -11,7 +11,6 @@ from PIL import Image
 import io
 
 
-
 from .models import Customer, Ticket, Order, Seller
 from .serializers import CustomerSerializer, TicketSerializer, OrderSerializer, SellerSerializer
 
@@ -520,6 +519,10 @@ def uploadCustomerPhoto(request, pk):
     if not photo_file:
         return Response({"detail": "No photo provided."}, status=400)
 
+    if not is_valid_image(photo_file):
+        return Response({"detail": "Invalid file type. Only JPEG, PNG, and GIF are allowed."},
+                        status=status.HTTP_400_BAD_REQUEST)
+
     if customer.profile_photo != None:
         return Response({"detail": "Use another request UPDATE."}, status=400)
 
@@ -557,6 +560,8 @@ def getCustomerPhoto(request, pk):
 
     if not customer.profile_photo:
         return Response({"detail": "No photo found."}, status=status.HTTP_404_NOT_FOUND)
+
+
 
     # Повертаємо зображення з файлової системи
     full_path = os.path.join(settings.MEDIA_ROOT, customer.profile_photo)
@@ -628,3 +633,11 @@ def deleteCustomerPhoto(request, pk):
     customer.save()
 
     return Response({"detail": "Photo deleted successfully."}, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+###########################################
