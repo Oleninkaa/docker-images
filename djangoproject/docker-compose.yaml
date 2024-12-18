@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  djangoapp:
+    container_name: djangoapp
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_DRIVER=django.db.backends.postgresql
+      - PG_USER=admin
+      - PG_PASSWORD=admin
+      - PG_DB=cinema
+      - PG_HOST=db
+      - PG_PORT=5432
+      - MONGO_DB_HOST=mongo
+      - MONGO_DB_PORT=27017
+      - MONGO_DB_USERNAME=admin
+      - MONGO_DB_PASSWORD=admin
+    volumes:
+      - ./media:/app/media  # Том для медіафайлів
+    depends_on:
+      - db
+      - mongo
+
+  db:
+    container_name: db
+    image: postgres:12
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=cinema
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initial_data.json:/app/initial_data.json
+
+  mongo:
+    image: mongo
+    container_name: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_DATABASE=cinema
+      - MONGO_INITDB_USERNAME=root
+      - MONGO_INITDB_PASSWORD=root
+    volumes:
+      - ./initial_data.json:/docker-entrypoint-initdb.d/initial_data.json
+    ports:
+      - 27017:27017
+
+volumes:
+  pgdata: {}

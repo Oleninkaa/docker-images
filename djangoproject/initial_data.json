@@ -1,0 +1,338 @@
+[
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Ivan",
+    "age": 25,
+    "gender": "Male",
+    "email": "ivan@example.com"
+    }
+},
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Maria",
+    "age": 30,
+    "gender": "Female",
+    "email": "maria@example.com"
+    }
+},
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Oleg",
+    "age": 28,
+    "gender": "Male",
+    "email": "oleg@example.com"
+    }
+},
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Tetiana",
+    "age": 35,
+    "gender": "Female",
+    "email": "tetiana@example.com"
+    }
+},
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Dmytro",
+    "age": 40,
+    "gender": "Male",
+    "email": "dmytro@example.com"
+    }
+},
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Oksana",
+    "age": 27,
+    "gender": "Female",
+    "email": "oksana@example.com"
+    }
+},
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Andriy",
+    "age": 32,
+    "gender": "Male",
+    "email": "andriy@example.com"
+    }
+},
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Iryna",
+    "age": 22,
+    "gender": "Female",
+    "email": "irina@example.com"
+    }
+},
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Serhiy",
+    "age": 29,
+    "gender": "Male",
+    "email": "serhiy@example.com"
+    }
+},
+{
+    "model": "djangoapp.customer",
+    "fields": {
+    "name": "Kateryna",
+    "age": 26,
+    "gender": "Female",
+    "email": "katerina@example.com"
+    }
+},
+{
+    "model": "djangoapp.seller",
+    "pk": 1,
+    "fields": {
+    "name": "Alexander Ivanenko",
+    "age": 32,
+    "gender": "male",
+    "additional_info": "5 years of experience in ticket sales."
+    }
+},
+{
+    "model": "djangoapp.seller",
+    "pk": 2,
+    "fields": {
+    "name": "Marina Kovalchuk",
+    "age": 28,
+    "gender": "female",
+    "additional_info": "Favorite movie genre is comedy."
+}
+},
+
+{
+"model": "djangoapp.ticket",
+"pk": 1,
+"fields": {
+    "seat_number": 1,
+    "date": "2024-12-01",
+    "time": "18:00:00",
+    "movie_title": "Interstellar"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 2,
+"fields": {
+    "seat_number": 2,
+    "date": "2024-12-01",
+    "time": "18:00:00",
+    "movie_title": "Interstellar"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 3,
+"fields": {
+    "seat_number": 3,
+    "date": "2024-12-01",
+    "time": "18:00:00",
+    "movie_title": "Interstellar"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 4,
+"fields": {
+    "seat_number": 4,
+    "date": "2024-12-02",
+    "time": "20:00:00",
+    "movie_title": "Dune"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 5,
+"fields": {
+    "seat_number": 5,
+    "date": "2024-12-02",
+    "time": "20:00:00",
+    "movie_title": "Dune"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 6,
+"fields": {
+    "seat_number": 6,
+    "date": "2024-12-02",
+    "time": "20:00:00",
+    "movie_title": "Dune"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 7,
+"fields": {
+    "seat_number": 7,
+    "date": "2024-12-03",
+    "time": "19:00:00",
+    "movie_title": "Avatar 2"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 8,
+"fields": {
+    "seat_number": 8,
+    "date": "2024-12-03",
+    "time": "19:00:00",
+    "movie_title": "Avatar 2"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 9,
+"fields": {
+    "seat_number": 9,
+    "date": "2024-12-03",
+    "time": "19:00:00",
+    "movie_title": "Avatar 2"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 10,
+"fields": {
+    "seat_number": 10,
+    "date": "2024-12-04",
+    "time": "21:00:00",
+    "movie_title": "The Matrix Resurrections"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 11,
+"fields": {
+    "seat_number": 11,
+    "date": "2024-12-04",
+    "time": "21:00:00",
+    "movie_title": "The Matrix Resurrections"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 12,
+"fields": {
+    "seat_number": 12,
+    "date": "2024-12-04",
+    "time": "21:00:00",
+    "movie_title": "The Matrix Resurrections"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 13,
+"fields": {
+    "seat_number": 13,
+    "date": "2024-12-05",
+    "time": "17:00:00",
+    "movie_title": "Inception"
+}
+},
+{
+"model": "djangoapp.ticket",
+"pk": 14,
+"fields": {
+    "seat_number": 14,
+    "date": "2024-12-05",
+    "time": "17:00:00",
+    "movie_title": "Inception"
+}
+},
+{
+    "model": "djangoapp.seller",
+    "pk": 1,
+    "fields": {
+    "name": "Alexander Ivanenko",
+    "age": 32,
+    "gender": "male",
+    "additional_info": "5 years of experience in ticket sales.",
+    "photo": null
+    }
+},
+{
+    "model": "djangoapp.seller",
+    "pk": 2,
+    "fields": {
+    "name": "Marina Kovalchuk",
+    "age": 28,
+    "gender": "female",
+    "additional_info": "Favorite movie genre is comedy.",
+    "photo": null
+    }
+},
+{
+    "model": "djangoapp.order",
+    "pk": 1,
+    "fields": {
+      "customer": 1,
+      "ticket": 1,
+      "seller": 1,
+      "order_date": "2024-11-24T15:00:00"
+    }
+  },
+{
+"model": "djangoapp.order",
+"pk": 2,
+"fields": {
+    "customer": 2,
+    "ticket": 2,
+    "seller": 1,
+    "order_date": "2024-11-24T15:30:00"
+}
+},
+{
+"model": "djangoapp.order",
+"pk": 3,
+"fields": {
+    "customer": 3,
+    "ticket": 3,
+    "seller": 2,
+    "order_date": "2024-11-24T16:00:00"
+}
+},
+{
+"model": "djangoapp.order",
+"pk": 4,
+"fields": {
+    "customer": 4,
+    "ticket": 4,
+    "seller": 2,
+    "order_date": "2024-11-24T16:30:00"
+}
+},
+{
+"model": "djangoapp.order",
+"pk": 5,
+"fields": {
+    "customer": 5,
+    "ticket": 5,
+    "seller": 1,
+    "order_date": "2024-11-24T17:00:00"
+}
+},
+{
+"model": "djangoapp.order",
+"pk": 6,
+"fields": {
+    "customer": 6,
+    "ticket": 6,
+    "seller": 1,
+    "order_date": "2024-11-24T17:30:00"
+}
+}
+]
+
+
+  
