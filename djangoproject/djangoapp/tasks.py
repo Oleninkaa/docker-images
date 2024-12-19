@@ -1,21 +1,30 @@
 from celery import shared_task
-import pika
+from pika import ConnectionParameters, BlockingConnection
+
+# Параметри підключення
+connection_params = ConnectionParameters(
+    host='rabbitmq',
+    port=5672,
+)
 
 @shared_task
 def send_message_to_queue(message):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
-    channel = connection.channel()
-
-    # Створення черги
-    channel.queue_declare(queue='order_queue', durable=True)
-
-    # Відправка повідомлення в чергу
-    channel.basic_publish(
-        exchange='',
-        routing_key='order_queue',
-        body=message,
-        properties=pika.BasicProperties(
-            delivery_mode=2,  # Встановлює повідомлення як стійке
-        )
-    )
-    connection.close()
+    """
+    Відправляє повідомлення до RabbitMQ.
+    """
+    try:
+        # Використання контекстного менеджера для безпечного закриття з'єднання та каналу
+        with BlockingConnection(connection_params) as conn:
+            with conn.channel() as ch:
+                # Створення черги
+                ch.queue_declare(queue='order_queue', durable=True)
+                
+                # Відправка повідомлення
+                ch.basic_publish(
+                    exchange='',
+                    routing_key='order_queue',
+                    body=message,
+                )
+                print(f" [x] Sent {message} to order_queue")
+    except Exception as e:
+        print(f"Помилка при відправці повідомлення: {e}")

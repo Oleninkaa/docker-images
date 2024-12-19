@@ -10,6 +10,8 @@ from django.http import JsonResponse, HttpResponse
 from PIL import Image
 import io
 
+from django.core.serializers.json import DjangoJSONEncoder
+import json
 
 from .models import Customer, Ticket, Order, Seller
 from .serializers import CustomerSerializer, TicketSerializer, OrderSerializer, SellerSerializer
@@ -67,22 +69,25 @@ def getTicket(request, pk):
     except Ticket.DoesNotExist:
         return Response({"error": "Ticket not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# Отримати всі замовлення (PostgreSQL)
-@api_view(['GET'])
-def getOrders(request):
-    orders = Order.objects.all()
-    serializer = OrderSerializer(orders, many=True)
-    return Response(serializer.data)
+# # Отримати всі замовлення (PostgreSQL)
+# @api_view(['GET'])
+# def getOrders(request):
+#     orders = Order.objects.all()
+#     serializer = OrderSerializer(orders, many=True)
+#     return Response(serializer.data)
 
-# Отримати одне замовлення (PostgreSQL)
-@api_view(['GET'])
-def getOrder(request, pk):
-    try:
-        order = Order.objects.get(id=pk)
-        serializer = OrderSerializer(order)
-        return Response(serializer.data)
-    except Order.DoesNotExist:
-        return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+# # Отримати одне замовлення (PostgreSQL)
+# @api_view(['GET'])
+# def getOrder(request, pk):
+#     try:
+#         order = Order.objects.get(id=pk)
+#         serializer = OrderSerializer(order)
+#         return Response(serializer.data)
+#     except Order.DoesNotExist:
+#         return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
 
 #===== ADDING
 # Створити нового продавця (MongoDB)
@@ -143,39 +148,39 @@ def addTicket(request):
 #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #===== UPDATING
-@api_view(['PUT'])
-def updateOrder(request, pk):
-    """
-    Оновити існуюче замовлення.
-    Очікує структуру даних:
-    {
-        "customer": <ID клієнта>,
-        "ticket": <ID квитка>,
-        "seller": <ID продавця>
-    }
-    """
-    try:
-        # Отримуємо замовлення за ID
-        order = Order.objects.get(id=pk)
-    except Order.DoesNotExist:
-        return Response({"error": "Замовлення з вказаним ID не знайдено."}, status=status.HTTP_404_NOT_FOUND)
+# @api_view(['PUT'])
+# def updateOrder(request, pk):
+#     """
+#     Оновити існуюче замовлення.
+#     Очікує структуру даних:
+#     {
+#         "customer": <ID клієнта>,
+#         "ticket": <ID квитка>,
+#         "seller": <ID продавця>
+#     }
+#     """
+#     try:
+#         # Отримуємо замовлення за ID
+#         order = Order.objects.get(id=pk)
+#     except Order.DoesNotExist:
+#         return Response({"error": "Замовлення з вказаним ID не знайдено."}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = OrderSerializer(order, data=request.data)
+#     serializer = OrderSerializer(order, data=request.data)
 
-    if serializer.is_valid():
-        # Перевірка, чи квиток прив'язаний до іншого замовлення
-        new_ticket_id = serializer.validated_data['ticket'].id
-        if Order.objects.filter(ticket_id=new_ticket_id).exclude(id=pk).exists():
-            return Response(
-                {"error": "Цей квиток вже прив'язаний до іншого замовлення."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+#     if serializer.is_valid():
+#         # Перевірка, чи квиток прив'язаний до іншого замовлення
+#         new_ticket_id = serializer.validated_data['ticket'].id
+#         if Order.objects.filter(ticket_id=new_ticket_id).exclude(id=pk).exists():
+#             return Response(
+#                 {"error": "Цей квиток вже прив'язаний до іншого замовлення."},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
 
-        # Оновлення замовлення
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+#         # Оновлення замовлення
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Update Customer
 @api_view(['PUT'])
@@ -272,50 +277,50 @@ def deleteSeller(request, pk):
     }, status=status.HTTP_200_OK)
 
 # Видалити одне замовлення
-@api_view(['DELETE'])
-def deleteOrder(request, pk):
-    try:
-        order = Order.objects.get(id=pk)
-    except Order.DoesNotExist:
-        return Response({"detail": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+# @api_view(['DELETE'])
+# def deleteOrder(request, pk):
+#     try:
+#         order = Order.objects.get(id=pk)
+#     except Order.DoesNotExist:
+#         return Response({"detail": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    order.delete()
-    return Response({"message": f"Order with ID {pk} successfully deleted."}, status=status.HTTP_200_OK)
+#     order.delete()
+#     return Response({"message": f"Order with ID {pk} successfully deleted."}, status=status.HTTP_200_OK)
 
-# FILTER ORDERS
-@api_view(['GET'])
-def filterOrders(request):
-    # Отримуємо параметри фільтрації з запиту
-    seller_id = request.query_params.get('seller', None)
-    start_date = request.query_params.get('start_date', None)
-    end_date = request.query_params.get('end_date', None)
+# # FILTER ORDERS
+# @api_view(['GET'])
+# def filterOrders(request):
+#     # Отримуємо параметри фільтрації з запиту
+#     seller_id = request.query_params.get('seller', None)
+#     start_date = request.query_params.get('start_date', None)
+#     end_date = request.query_params.get('end_date', None)
 
-    orders = Order.objects.all()
+#     orders = Order.objects.all()
 
-    # Фільтрація за продавцем
-    if seller_id:
-        try:
-            seller_id = int(seller_id)  # Перетворюємо на ціле число
-            orders = orders.filter(seller_id=seller_id)
-        except ValueError:
-            return JsonResponse({'error': 'Invalid seller ID'}, status=400)
+#     # Фільтрація за продавцем
+#     if seller_id:
+#         try:
+#             seller_id = int(seller_id)  # Перетворюємо на ціле число
+#             orders = orders.filter(seller_id=seller_id)
+#         except ValueError:
+#             return JsonResponse({'error': 'Invalid seller ID'}, status=400)
 
-    # Фільтрація за датою
-    if start_date:
-        start_date = parse_datetime(start_date)
-        if not start_date:
-            return JsonResponse({'error': 'Invalid start date format'}, status=400)
-        orders = orders.filter(order_date__gte=start_date)
+#     # Фільтрація за датою
+#     if start_date:
+#         start_date = parse_datetime(start_date)
+#         if not start_date:
+#             return JsonResponse({'error': 'Invalid start date format'}, status=400)
+#         orders = orders.filter(order_date__gte=start_date)
 
-    if end_date:
-        end_date = parse_datetime(end_date)
-        if not end_date:
-            return JsonResponse({'error': 'Invalid end date format'}, status=400)
-        orders = orders.filter(order_date__lte=end_date)
+#     if end_date:
+#         end_date = parse_datetime(end_date)
+#         if not end_date:
+#             return JsonResponse({'error': 'Invalid end date format'}, status=400)
+#         orders = orders.filter(order_date__lte=end_date)
 
-    # Серіалізація та повернення результату
-    serializer = OrderSerializer(orders, many=True)
-    return Response(serializer.data)
+#     # Серіалізація та повернення результату
+#     serializer = OrderSerializer(orders, many=True)
+#     return Response(serializer.data)
 
 
 # DELETE MANY
@@ -640,10 +645,84 @@ def deleteCustomerPhoto(request, pk):
 
 
 
-###########################################
+################ БРОКЕРИ ###########################
 from .tasks import send_message_to_queue
 
+# ОТРИМАТИ ВСІ ЗАМОВЛЕННЯ
+@api_view(['GET'])
+def getOrders(request):
+    """
+    API endpoint для отримання всіх замовлень через брокер повідомлень
+    """
+    try:
+        # Отримуємо всі замовлення
+        orders = Order.objects.all()
+        # Серіалізуємо дані
+        serializer = OrderSerializer(orders, many=True)
+        serialized_data = serializer.data
 
+        # Формуємо повідомлення для черги
+        message = json.dumps({
+            'action': 'get_all_orders',
+            'data': serialized_data
+        }, cls=DjangoJSONEncoder)
+        
+        # Відправляємо повідомлення в чергу
+        send_message_to_queue(message)
+        
+        # Повертаємо серіалізовані дані
+        return Response(serialized_data)
+        
+    except json.JSONDecodeError as e:
+        return Response({
+            "error": f"JSON serialization error: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return Response({
+            "error": f"Failed to process request: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ОТРИМАТИ КОНКРЕТНЕ ЗАМОВЛЕННЯ
+@api_view(['GET'])
+def getOrder(request, pk):
+    """
+    API endpoint для отримання замовлення через брокер повідомлень
+    """
+    try:
+        # Отримуємо дані з бази
+        order = Order.objects.get(id=pk)
+        # Серіалізуємо дані
+        serializer = OrderSerializer(order)
+        serialized_data = serializer.data
+        
+        # Формуємо повідомлення для черги з серіалізованими даними
+        message = json.dumps({
+            'action': 'get_order',
+            'order_id': pk,
+            'data': serialized_data
+        }, cls=DjangoJSONEncoder)
+        
+        # Відправляємо повідомлення в чергу
+        send_message_to_queue(message)
+        
+        # Повертаємо серіалізовані дані
+        return Response(serialized_data)
+        
+    except Order.DoesNotExist:
+        return Response(
+            {"error": "Order not found"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except json.JSONDecodeError as e:
+        return Response({
+            "error": f"JSON serialization error: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return Response({
+            "error": f"Failed to process request: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ДОДАТИ ЗАМОВЛЕННЯ
 @api_view(['POST'])
 def addOrder(request):
     """
@@ -670,4 +749,128 @@ def addOrder(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# ОНОВИТИ ІСНУЮЧЕ ЗАМОВЛЕННЯ
+@api_view(['PUT'])
+def updateOrder(request, pk):
+    """
+    Оновити існуюче замовлення.
+    Очікує структуру даних:
+    {
+        "customer": <ID клієнта>,
+        "ticket": <ID квитка>,
+        "seller": <ID продавця>
+    }
+    """
+    try:
+        # Отримуємо замовлення за ID
+        order = Order.objects.get(id=pk)
+    except Order.DoesNotExist:
+        return Response({"error": "Замовлення з вказаним ID не знайдено."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = OrderSerializer(order, data=request.data)
+
+    if serializer.is_valid():
+        # Перевірка, чи квиток прив'язаний до іншого замовлення
+        new_ticket_id = serializer.validated_data['ticket'].id
+        if Order.objects.filter(ticket_id=new_ticket_id).exclude(id=pk).exists():
+            return Response(
+                {"error": "Цей квиток вже прив'язаний до іншого замовлення."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Оновлення замовлення
+        updated_order = serializer.save()
+
+        # Відправка повідомлення про оновлення в RabbitMQ
+        send_message_to_queue.delay(f"Order with ID {pk} updated.")
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# ВИДАЛИТИ ЗАМОВЛЕННЯ
+@api_view(['DELETE'])
+def deleteOrder(request, pk):
+    """
+    Видалити замовлення за ID і відправити повідомлення в RabbitMQ.
+    """
+    try:
+        order = Order.objects.get(id=pk)
+    except Order.DoesNotExist:
+        return Response({"detail": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Видалення замовлення
+    order.delete()
+
+    # Відправка повідомлення в RabbitMQ через брокер
+    send_message_to_queue.delay(f"Order with ID {pk} deleted.")
+
+    return Response({"message": f"Order with ID {pk} successfully deleted."}, status=status.HTTP_200_OK)
+
+# ВІДФІЛЬТРУВАТИ ЗАМОВЛЕННЯ
+@api_view(['GET'])
+def filterOrders(request):
+    """
+    API endpoint для фільтрації замовлень з використанням брокера повідомлень
+    """
+    try:
+        # Отримуємо параметри фільтрації з запиту
+        seller_id = request.query_params.get('seller', None)
+        start_date = request.query_params.get('start_date', None)
+        end_date = request.query_params.get('end_date', None)
+        
+        orders = Order.objects.all()
+        
+        # Фільтрація за продавцем
+        if seller_id:
+            try:
+                seller_id = int(seller_id)  # Перетворюємо на ціле число
+                orders = orders.filter(seller_id=seller_id)
+            except ValueError:
+                return JsonResponse({'error': 'Invalid seller ID'}, status=400)
+                
+        # Фільтрація за датою
+        if start_date:
+            start_date = parse_datetime(start_date)
+            if not start_date:
+                return JsonResponse({'error': 'Invalid start date format'}, status=400)
+            orders = orders.filter(order_date__gte=start_date)
+            
+        if end_date:
+            end_date = parse_datetime(end_date)
+            if not end_date:
+                return JsonResponse({'error': 'Invalid end date format'}, status=400)
+            orders = orders.filter(order_date__lte=end_date)
+            
+        # Серіалізація даних
+        serializer = OrderSerializer(orders, many=True)
+        serialized_data = serializer.data
+        
+        # Формуємо повідомлення для черги
+        message = json.dumps({
+            'action': 'filter_orders',
+            'filters': {
+                'seller_id': seller_id,
+                'start_date': start_date.isoformat() if start_date else None,
+                'end_date': end_date.isoformat() if end_date else None
+            },
+            'data': serialized_data
+        }, cls=DjangoJSONEncoder)
+        
+        # Відправляємо повідомлення в чергу
+        send_message_to_queue(message)
+        
+        # Повертаємо відфільтровані дані
+        return Response(serialized_data)
+        
+    except json.JSONDecodeError as e:
+        return Response({
+            "error": f"JSON serialization error: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return Response({
+            "error": f"Failed to process request: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
