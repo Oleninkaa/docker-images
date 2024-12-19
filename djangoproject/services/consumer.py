@@ -1,47 +1,52 @@
-import pika
-import json
+from pika import BlockingConnection, ConnectionParameters, BasicProperties
 
-# Параметри підключення до RabbitMQ
-RABBITMQ_HOST = 'rabbitmq'  # Зазначте правильне ім'я хоста для RabbitMQ
-QUEUE_NAME = 'order_queue'  # Назва черги
 
-def callback(ch, method, properties, body):
+# Параметри підключення
+connection_params = ConnectionParameters(
+    host='rabbitmq',
+    port=5672,
+)
+
+def consume_messages():
     """
-    Функція, яка обробляє отримані повідомлення.
+    Споживає повідомлення з черги RabbitMQ.
     """
-    print("Received message: ", body.decode())
-    message = json.loads(body)
-
-    # Виконати відповідну дію
-    print("Processing message:", message)
-
-    # Підтвердити обробку повідомлення
-    ch.basic_ack(delivery_tag=method.delivery_tag)
-
-def main():
-    print("Connecting to RabbitMQ...")
     try:
-        # Підключення до RabbitMQ
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST))
-        channel = connection.channel()
-        print("Connected to RabbitMQ.")
+        with BlockingConnection(connection_params) as connection:
+            channel = connection.channel()
+
+            # Оголошення черги (якщо вона ще не існує)
+            channel.queue_declare(queue='order_queue', durable=True)
+
+            def callback(ch, method, properties, body):
+              try:
+                  # Обробка отриманого повідомлення
+                  print(f" [x] Received {body.decode()}")
+
+
+                  # Виконання необхідних дій з повідомленням
+
+                  # Підтвердження обробки повідомлення
+                  ch.basic_ack(delivery_tag=method.delivery_tag)
+
+              except Exception as e:
+                  print(f"Помилка при обробці повідомлення: {e}")
+                  # Відхилення повідомлення (можна використовувати requeue=True для повторної спроби)
+                  ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+
+
+            # Споживання повідомлень з черги
+            channel.basic_consume(
+                queue='order_queue',
+                on_message_callback=callback,
+                auto_ack = False
+            )
+
+            print(' [*] Waiting for messages. To exit press CTRL+C')
+            channel.start_consuming()
+
     except Exception as e:
-        print(f"Error connecting to RabbitMQ: {e}")
-        return
+        print(f"Помилка при підключенні до RabbitMQ: {e}")
 
-    # Забезпечення існування черги
-    channel.queue_declare(queue=QUEUE_NAME, durable=True)
-    print(f"Waiting for messages in queue '{QUEUE_NAME}'. To exit press CTRL+C")
-
-    # Споживання повідомлень
-    channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback)
-
-    # Запуск нескінченного циклу для обробки повідомлень
-    try:
-        channel.start_consuming()
-    except KeyboardInterrupt:
-        print("Consumer stopped.")
-        connection.close()
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    consume_messages()
