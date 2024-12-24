@@ -146,10 +146,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # settings.py
 # Celery configuration
-# settings.py
 CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
 CELERY_RESULT_BACKEND = None  # Якщо не потрібне збереження результатів
-
+CELERYD_LOG_LEVEL = 'DEBUG' # Рівень логування для Celery
 
 
 

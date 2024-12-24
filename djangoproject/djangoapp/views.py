@@ -648,40 +648,6 @@ def deleteCustomerPhoto(request, pk):
 ################ БРОКЕРИ ###########################
 from .tasks import send_message_to_queue
 
-# ОТРИМАТИ ВСІ ЗАМОВЛЕННЯ
-@api_view(['GET'])
-def getOrders(request):
-    """
-    API endpoint для отримання всіх замовлень через брокер повідомлень
-    """
-    try:
-        # Отримуємо всі замовлення
-        orders = Order.objects.all()
-        # Серіалізуємо дані
-        serializer = OrderSerializer(orders, many=True)
-        serialized_data = serializer.data
-
-        # Формуємо повідомлення для черги
-        message = json.dumps({
-            'action': 'get_all_orders',
-            'data': serialized_data
-        }, cls=DjangoJSONEncoder)
-        
-        # Відправляємо повідомлення в чергу
-        send_message_to_queue(message)
-        
-        # Повертаємо серіалізовані дані
-        return Response(serialized_data)
-        
-    except json.JSONDecodeError as e:
-        return Response({
-            "error": f"JSON serialization error: {str(e)}"
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    except Exception as e:
-        return Response({
-            "error": f"Failed to process request: {str(e)}"
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 # ОТРИМАТИ КОНКРЕТНЕ ЗАМОВЛЕННЯ
 @api_view(['GET'])
 def getOrder(request, pk):
@@ -808,60 +774,29 @@ def deleteOrder(request, pk):
 
     return Response({"message": f"Order with ID {pk} successfully deleted."}, status=status.HTTP_200_OK)
 
-# ВІДФІЛЬТРУВАТИ ЗАМОВЛЕННЯ
+# ОТРИМАТИ ВСІ ЗАМОВЛЕННЯ
 @api_view(['GET'])
-def filterOrders(request):
+def getOrders(request):
     """
-    API endpoint для фільтрації замовлень з використанням брокера повідомлень
+    API endpoint для отримання всіх замовлень через брокер повідомлень
     """
     try:
-        # Отримуємо параметри фільтрації з запиту
-        seller_id = request.query_params.get('seller', None)
-        start_date = request.query_params.get('start_date', None)
-        end_date = request.query_params.get('end_date', None)
-        
+        # Отримуємо всі замовлення
         orders = Order.objects.all()
-        
-        # Фільтрація за продавцем
-        if seller_id:
-            try:
-                seller_id = int(seller_id)  # Перетворюємо на ціле число
-                orders = orders.filter(seller_id=seller_id)
-            except ValueError:
-                return JsonResponse({'error': 'Invalid seller ID'}, status=400)
-                
-        # Фільтрація за датою
-        if start_date:
-            start_date = parse_datetime(start_date)
-            if not start_date:
-                return JsonResponse({'error': 'Invalid start date format'}, status=400)
-            orders = orders.filter(order_date__gte=start_date)
-            
-        if end_date:
-            end_date = parse_datetime(end_date)
-            if not end_date:
-                return JsonResponse({'error': 'Invalid end date format'}, status=400)
-            orders = orders.filter(order_date__lte=end_date)
-            
-        # Серіалізація даних
+        # Серіалізуємо дані
         serializer = OrderSerializer(orders, many=True)
         serialized_data = serializer.data
-        
+
         # Формуємо повідомлення для черги
         message = json.dumps({
-            'action': 'filter_orders',
-            'filters': {
-                'seller_id': seller_id,
-                'start_date': start_date.isoformat() if start_date else None,
-                'end_date': end_date.isoformat() if end_date else None
-            },
+            'action': 'get_all_orders',
             'data': serialized_data
         }, cls=DjangoJSONEncoder)
         
         # Відправляємо повідомлення в чергу
         send_message_to_queue(message)
         
-        # Повертаємо відфільтровані дані
+        # Повертаємо серіалізовані дані
         return Response(serialized_data)
         
     except json.JSONDecodeError as e:
@@ -873,4 +808,73 @@ def filterOrders(request):
             "error": f"Failed to process request: {str(e)}"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# ВІДФІЛЬТРУВАТИ ЗАМОВЛЕННЯ
+@api_view(['GET'])
+def filterOrders(request):
+    try:
+        seller_id = request.query_params.get('seller', None)
+        start_date = request.query_params.get('start_date', None)
+        end_date = request.query_params.get('end_date', None)
 
+        # Перевірка наявності хоча б одного з фільтрів
+        if seller_id is None and (start_date is None or end_date is None):
+            return Response(
+                {"error": "Either 'seller' or both 'start_date' and 'end_date' parameters are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        filters = {}
+
+        # Якщо передано 'seller', додаємо до фільтра
+        if seller_id is not None:
+            try:
+                seller_id = int(seller_id)
+                filters['seller_id'] = seller_id
+            except ValueError:
+                return Response(
+                    {"error": "Invalid seller ID format"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Якщо передано 'start_date' та 'end_date', додаємо до фільтра
+        if start_date is not None and end_date is not None:
+            filters['start_date'] = start_date
+            filters['end_date'] = end_date
+
+        # Отримуємо замовлення з фільтрами
+        orders = Order.objects.all()
+
+        if 'seller_id' in filters:
+            orders = orders.filter(seller_id=filters['seller_id'])
+
+        if 'start_date' in filters and 'end_date' in filters:
+            # Фільтрація за полем 'order_date', якщо воно відповідає даті створення
+            orders = orders.filter(
+                order_date__gte=start_date,
+                order_date__lte=end_date
+            )
+
+        if not orders.exists():
+            return Response(
+                {"error": "No orders found for the given filters"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Серіалізація результатів
+        serializer = OrderSerializer(orders, many=True)
+        
+        # Відправляємо повідомлення в чергу для логування
+        message = json.dumps({
+            'action': 'get_orders_by_filter',
+            'filters': filters,
+            'data': serializer.data
+        }, cls=DjangoJSONEncoder)
+        
+        send_message_to_queue(message)
+        
+        return Response(serializer.data)
+
+    except Exception as e:
+        return Response({
+            "error": f"Failed to process request: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

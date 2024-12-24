@@ -32,8 +32,7 @@ urlpatterns = [
     path('orders/delete/<int:pk>/', views.deleteOrder, name='delete_order'),
 
     # Filter orders by date or seller
-    path('orders/filter/', views.filterOrders, name='get_orders_by_seller'),
-
+    path('orders/filter/', views.filterOrders, name='get_orders_by_filter'),
 
     path('sellers/<int:pk>/upload-photo/', views.uploadSellerPhoto, name='upload-seller-photo'),
     path('sellers/<int:pk>/photo/', views.getSellerPhoto, name='get-seller-photo'),
