@@ -1,4 +1,6 @@
 from pika import BlockingConnection, ConnectionParameters, BasicProperties
+from pika.exceptions import AMQPConnectionError
+import time
 
 
 # Параметри підключення
@@ -14,39 +16,37 @@ def consume_messages():
     try:
         with BlockingConnection(connection_params) as connection:
             channel = connection.channel()
-
-            # Оголошення черги (якщо вона ще не існує)
             channel.queue_declare(queue='order_queue', durable=True)
 
             def callback(ch, method, properties, body):
-              try:
-                  # Обробка отриманого повідомлення
-                  print(f" [x] Received {body.decode()}")
+                try:
+                    print(f" [x] Received {body.decode()}")
+                    ch.basic_ack(delivery_tag=method.delivery_tag)
+                except Exception as e:
+                    print(f"Помилка при обробці повідомлення: {e}")
+                    ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
-
-                  # Виконання необхідних дій з повідомленням
-
-                  # Підтвердження обробки повідомлення
-                  ch.basic_ack(delivery_tag=method.delivery_tag)
-
-              except Exception as e:
-                  print(f"Помилка при обробці повідомлення: {e}")
-                  # Відхилення повідомлення (можна використовувати requeue=True для повторної спроби)
-                  ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
-
-
-            # Споживання повідомлень з черги
             channel.basic_consume(
                 queue='order_queue',
                 on_message_callback=callback,
-                auto_ack = False
+                auto_ack=False,
             )
 
             print(' [*] Waiting for messages. To exit press CTRL+C')
             channel.start_consuming()
 
-    except Exception as e:
-        print(f"Помилка при підключенні до RabbitMQ: {e}")
+    except AMQPConnectionError as e:
+        raise ConnectionError(f"Помилка підключення до RabbitMQ: {e}")
 
 if __name__ == '__main__':
-    consume_messages()
+    while True:
+        try:
+            consume_messages()
+        except KeyboardInterrupt:
+            print("Споживач зупинений вручну.")
+            break
+        except ConnectionError as e:
+            print(f"{e}. Очікування 5 секунд перед повтором...")
+            time.sleep(5)  # Затримка перед повторною спробою
+        except Exception as e:
+            print(f"Неочікувана помилка: {e}. Перезапуск...")
